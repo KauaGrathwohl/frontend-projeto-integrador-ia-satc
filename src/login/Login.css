@@ -1,0 +1,44 @@
+.login {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #E9E9E9;
+}
+
+.login-card {
+  width: 520px;
+  height: 400px;
+  padding: 40px;
+  border-radius: 10px;
+  background-color: white;
+  box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.login-title {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.login-subtitle {
+  font-size: 14px;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.inner-box {
+  background-color: #F2F2F2;
+  padding: 10px;
+  border-radius: 5px;
+  margin-bottom: 20px;
+}
+
+.ant-input {
+  border-radius: 5px;
+}
+
+.ant-btn {
+  border-radius: 5px;
+}

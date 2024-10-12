@@ -6,13 +6,8 @@ export default function ProtectedRoute({ to = '/' }) {
   const { user } = useAuth();
 
   if (!user) {
-    return (
-      <Navigate to={to}
-        replace />
-    );
+    return <Navigate to={to} replace />;
   }
 
-  return (
-    <Outlet />
-  );
+  return <Outlet />;
 }

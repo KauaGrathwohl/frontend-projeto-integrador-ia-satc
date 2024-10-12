@@ -16,15 +16,11 @@ export function AuthProvider(props) {
 
   useEffect(() => {
     if (user) {
-      localStorage.setItem(USER_KEY, JSON.stringify(user));
-    } else {
-      localStorage.removeItem(USER_KEY);
     }
   }, [user]);
 
   return (
-    <AuthContext.Provider  {...props}
-      value={{ user, setUser }} />
+    <AuthContext.Provider {...props} value={{ user, setUser }} />
   );
 }
 

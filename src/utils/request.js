@@ -79,10 +79,10 @@ function normalizeContext(url, dirt) {
   if (context.api !== false) {
     const token = getToken();
 
-    context.url = `/api${context.url}`;
+    context.url = `${context.url}`;
 
     if (token) {
-      context.headers['Authorization'] = token;
+      context.headers['Authorization'] = 'Bearer ' + token;
     }
   }
 

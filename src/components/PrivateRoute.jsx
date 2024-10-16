@@ -12,10 +12,14 @@ export default function PrivateRoute() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (!auth.isAuthenticated()) {
+      navigate('/entrar');
+    }
+
     axios.interceptors.response.use((response) => response, (response) => {
       if (response.status === 401) {
         auth.logout();
-        navigate('/login');
+        navigate('/entrar');
       }
 
       return Promise.reject(response);

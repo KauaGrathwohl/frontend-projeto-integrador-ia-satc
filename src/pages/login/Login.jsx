@@ -1,37 +1,38 @@
 import React, { useState } from 'react';
-import { Button, Col, Form, Input, Row, notification, message } from 'antd';
+import { Navigate } from 'react-router-dom';
+import { Button, Col, Form, Input, message, notification, Radio, Row } from 'antd';
 import { MailOutlined, UnlockOutlined } from '@ant-design/icons';
-import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../providers/AuthProvider';
+
 import './login.css';
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
   const [form] = Form.useForm();
   const auth = useAuth();
-  const navigate = useNavigate();
 
   const handleSubmit = (values) => {
     setLoading(true);
 
-    const { usuario, senha } = values;
-
     auth
-        .login({ usuario, senha })
-        .then(() => {
-          setLoading(false);
-          message.success('Login realizado com sucesso!');
-          navigate('/dashboard', { replace: true });
-        })
-        .catch((err) => {
-          setLoading(false);
-          notification.error({
-            message: 'Erro!',
-            description: err.message,
-          });
-          form.resetFields();
+      .login(values)
+      .then(() => {
+        setLoading(false);
+        message.success('Login realizado com sucesso!');
+      }).catch((err) => {
+        setLoading(false);
+        notification.error({
+          message: 'Erro!',
+          description: err.message,
         });
-  };
+      });
+  }
+
+  if (auth.isAuthenticated()) {
+    return (
+      <Navigate to='/dashboard' />
+    )
+  }
 
   return (
       <Row justify='center' align='middle' className='login'>

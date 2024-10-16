@@ -23,8 +23,8 @@ export default function Paciente() {
 
     request('/paciente', {
       method: 'GET',
-      params: { filtro },
     }).then((data) => {
+      console.log(data)
       setLoading(false);
       setData(data);
     }).catch((err) => {
@@ -75,13 +75,13 @@ export default function Paciente() {
       </Row>
       <Row style={{ marginTop: 20 }}
         gutter={[0, 10]}>
-        {data.map((item) => (
-          <Col key={item.id}
-            span={24}>
-            <Item data={item}
-              fetch={fetch} />
-          </Col>
-        ))}
+        {/*{data.map((item) => (*/}
+        {/*  <Col key={item.id}*/}
+        {/*    span={24}>*/}
+        {/*    <Item data={item}*/}
+        {/*      fetch={fetch} />*/}
+        {/*  </Col>*/}
+        {/*))}*/}
       </Row>
     </Screen>
   );

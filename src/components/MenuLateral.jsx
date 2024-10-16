@@ -41,7 +41,7 @@ export default function MenuLateral() {
 
     if (key === 'sair') {
       auth.logout();
-      navigate('/login');
+      navigate('/entrar');
 
       return;
     }

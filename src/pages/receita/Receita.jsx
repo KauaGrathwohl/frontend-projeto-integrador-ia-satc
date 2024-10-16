@@ -24,9 +24,10 @@ export default function Receita() {
     request('/receita', {
       method: 'GET',
       params: { filtro },
-    }).then((data) => {
+    }).then((response) => {
       setLoading(false);
-      setData(data);
+      // Ensure the response is an array
+      setData(Array.isArray(response) ? response : []);
     }).catch((err) => {
       setLoading(false);
       Modal.error({
@@ -37,52 +38,29 @@ export default function Receita() {
   }
 
   return (
-    <Screen>
-      <Row gutter={[10, 5]}
-        justify='space-between'>
-        <Col span={24}
-          style={{
-            marginTop: 10,
-            marginBottom: 5,
-            fontSize: 25,
-            fontWeight: 'bold',
-            opacity: 0.7,
-          }}>
-          Receitas
-        </Col>
-        <Col xl={10}
-          lg={12}
-          md={14}
-          xs={24}>
-          <Input.Search size='large'
-            value={filtro}
-            loading={loading}
-            onChange={(e) => setFiltro(e.target.value)} />
-        </Col>
-        <Col xl={4}
-          lg={5}
-          md={10}
-          xs={24}>
-          <Detalhes onClose={fetch}>
-            <Button block
-              loading={loading}
-              type='primary'
-              size='large'>
-              Nova Receita
-            </Button>
-          </Detalhes>
-        </Col>
-      </Row>
-      <Row style={{ marginTop: 20 }}
-        gutter={[0, 10]}>
-        {data.map((item) => (
-          <Col key={item.id}
-            span={24}>
-            <Item data={item}
-              fetch={fetch} />
+      <Screen>
+        <Row gutter={[10, 5]} justify='space-between'>
+          <Col span={24} style={{ marginTop: 10, marginBottom: 5, fontSize: 25, fontWeight: 'bold', opacity: 0.7 }}>
+            Receitas
           </Col>
-        ))}
-      </Row>
-    </Screen>
+          <Col xl={10} lg={12} md={14} xs={24}>
+            <Input.Search size='large' value={filtro} loading={loading} onChange={(e) => setFiltro(e.target.value)} />
+          </Col>
+          <Col xl={4} lg={5} md={10} xs={24}>
+            <Detalhes onClose={fetch}>
+              <Button block loading={loading} type='primary' size='large'>
+                Nova Receita
+              </Button>
+            </Detalhes>
+          </Col>
+        </Row>
+        <Row style={{ marginTop: 20 }} gutter={[0, 10]}>
+          {data.map((item) => (
+              <Col key={item.id} span={24}>
+                <Item data={item} fetch={fetch} />
+              </Col>
+          ))}
+        </Row>
+      </Screen>
   );
 }

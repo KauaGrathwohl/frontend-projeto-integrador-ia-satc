@@ -1,27 +1,26 @@
 import React, { lazy } from 'react';
-import { BrowserRouter, Route, Routes } from 'react-router-dom';
-import { AuthProvider } from '../context/auth';
+import { BrowserRouter, Route, Routes, Navigate } from 'react-router-dom';
 
-const ProtectedRoute = lazy(() => import('./ProtectedRoute'));
-const Painel = lazy(() => import('./Painel'));
-const Login = lazy(() => import('../login/Login'));
-const Dashboard = lazy(() => import('../dashboard/Dashboard'));
+import Login from '../pages/login/Login';
+
+const PrivateRoute = lazy(() => import('../components/PrivateRoute'));
+const Dashboard = lazy(() => import('../pages/dashboard/Dashboard'));
+const Paciente = lazy(() => import('../pages/paciente/Paciente'));
+const Receita = lazy(() => import('../pages/receita/Receita'));
 
 export default function AppRouter() {
   return (
-    <AuthProvider>
       <BrowserRouter>
         <Routes>
-          <Route index element={<Login />} />
           <Route path='/login' element={<Login />} />
-          <Route element={<ProtectedRoute />}>
-            <Route element={<Painel />}>
-              <Route index element={<Dashboard />} />
-              <Route path='/dashboard' element={<Dashboard />} />
-            </Route>
+          <Route element={<PrivateRoute />}>
+            <Route path='/dashboard' element={<Dashboard />} />
+            <Route path='/pacientes' element={<Paciente />} />
+            <Route path='/receitas' element={<Receita />} />
+            <Route path='*' element={<Navigate to='/dashboard' replace />} />
           </Route>
+          <Route path='*' element={<Navigate to='/login' replace />} />
         </Routes>
       </BrowserRouter>
-    </AuthProvider>
   );
 }

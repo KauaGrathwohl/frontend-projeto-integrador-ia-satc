@@ -25,7 +25,7 @@ export default function Detalhes({ id, onClose, children }) {
 
     setLoading(true);
 
-    request(`/receita`, {
+    request(`/receita/${id}`, {
       method: 'GET',
     }).then(({ ingredientes, ...data }) => {
       setLoading(false);

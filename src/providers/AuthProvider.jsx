@@ -36,6 +36,7 @@ export default function AuthProvider(props) {
         body: { usuario, senha },
       }).then((user) => {
         setUser(user);
+        localStorage.setItem(STORAGE_USER_KEY, JSON.stringify(user));
         resolve(user);
       }).catch((err) => {
         reject(err);
@@ -53,15 +54,13 @@ export default function AuthProvider(props) {
       return false;
     }
 
-    const { id, token } = user;
+    const { token } = user;
 
-    if (typeof id != 'number' || id <= 0) {
+    if (typeof token != 'string' || !token.trim().length) {
       return false;
     }
 
-    return !(typeof token != 'string' || !token.trim().length);
-
-
+    return true;
   }
 
   const contextValue = {
@@ -72,8 +71,8 @@ export default function AuthProvider(props) {
   };
 
   return (
-      <AuthContext.Provider {...props}
-                            value={contextValue} />
+    <AuthContext.Provider {...props}
+      value={contextValue} />
   );
 }
 

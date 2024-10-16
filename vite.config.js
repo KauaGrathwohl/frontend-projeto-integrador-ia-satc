@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react';
 
 const BACKEND_PORT = 8080;
 const FRONTEND_PORT = 4000;
+
 const PROXY_OPTIONS = {
   target: `http://localhost:${BACKEND_PORT}`,
   changeOrigin: true,
@@ -18,9 +19,8 @@ export default defineConfig({
   server: {
     port: FRONTEND_PORT,
     proxy: {
-      '/auth': PROXY_OPTIONS,
-      '/api': PROXY_OPTIONS,
+      '/auth': PROXY_OPTIONS, //login no sistema
+      '/api': PROXY_OPTIONS, //exige autenticação
     },
-    open: '/login',
-    },
+  },
 });

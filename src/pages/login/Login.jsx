@@ -23,14 +23,14 @@ export default function Login() {
         setLoading(false);
         notification.error({
           message: 'Erro!',
-          description: err.message,
+          description: err,
         });
       });
   }
 
   if (auth.isAuthenticated()) {
     return (
-      <Navigate to='/dashboard' />
+      <Navigate to='/app/dashboard' />
     )
   }
 

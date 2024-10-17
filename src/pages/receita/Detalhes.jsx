@@ -35,7 +35,7 @@ export default function Detalhes({ id, onClose, children }) {
       setLoading(false);
       Modal.error({
         title: 'Erro!',
-        content: err.message,
+        content: err,
       });
     });
   }
@@ -60,7 +60,7 @@ export default function Detalhes({ id, onClose, children }) {
       setLoading(false);
       Modal.error({
         title: 'Erro!',
-        content: err.message,
+        content: err,
       });
     });
   }

@@ -1,40 +1,12 @@
 import React, { useState } from 'react';
-import { Row, Modal, Form, Spin, Col, Input, InputNumber, Table, Button, message } from 'antd';
-import { DeleteOutlined } from '@ant-design/icons';
+import { Row, Modal, Form, Spin, Col, Input, InputNumber, Button } from 'antd';
 import request from '../../utils/request';
 import DatePicker from '../../components/DatePicker';
-import AdicionarPlano from './AdicionarPlano';
 
 export default function Detalhes({ id, onClose, children }) {
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [planos, setPlanos] = useState([]);
   const [form] = Form.useForm();
-  const columns = [
-    {
-      title: 'Nome',
-      key: 'nome',
-      dataIndex: 'nome',
-    },
-    {
-      title: 'Início',
-      key: 'dhInicio',
-      dataIndex: 'dhInicio',
-      width: 110,
-      render: (value) => value ? new Date(value).toLocaleDateString() : null,
-    },
-    {
-      title: '',
-      key: 'nome',
-      dataIndex: 'nome',
-      width: 35,
-      render: (value) => (
-        <Button danger
-          icon={<DeleteOutlined />}
-          onClick={() => removePlano(value)} />
-      ),
-    },
-  ];
 
   const modal = (e) => {
     e.stopPropagation();
@@ -52,17 +24,16 @@ export default function Detalhes({ id, onClose, children }) {
 
     setLoading(true);
 
-    request(`/paciente/${id}`, {
+    request(`/paciente/detalhes/${id}`, {
       method: 'GET',
-    }).then(({ planos, ...data }) => {
+    }).then((data) => {
       setLoading(false);
-      setPlanos(planos || []);
       form.setFieldsValue(data);
     }).catch((err) => {
       setLoading(false);
       Modal.error({
         title: 'Erro!',
-        content: err.message,
+        content: err,
       });
     });
   }
@@ -78,7 +49,7 @@ export default function Detalhes({ id, onClose, children }) {
 
     request(url, {
       method: id ? 'PUT' : 'POST',
-      body: { ...values, planos, id },
+      body: { ...values, id },
     }).then(() => {
       setLoading(false);
       handleClear();
@@ -87,7 +58,7 @@ export default function Detalhes({ id, onClose, children }) {
       setLoading(false);
       Modal.error({
         title: 'Erro!',
-        content: err.message,
+        content: err,
       });
     });
   }
@@ -96,19 +67,6 @@ export default function Detalhes({ id, onClose, children }) {
     form.resetFields();
     setLoading(false);
     setVisible(false);
-    setPlanos([]);
-  }
-
-  const addPlano = (value) => {
-    if (planos.some((el) => el.nome === value.nome)) {
-      return message.error(`Plano "${value.nome}" já adicionado`);
-    }
-
-    setPlanos([...planos, value]);
-  }
-
-  const removePlano = (nome) => {
-    setPlanos(planos.filter((el) => el.nome !== nome));
   }
 
   return (
@@ -124,7 +82,13 @@ export default function Detalhes({ id, onClose, children }) {
         destroyOnClose
         onCancel={handleClear}
         onOk={form.submit}
-        width={1000}>
+        width={1000}
+        footer={id ? (
+          <Button type='primary'
+            onClick={handleClear}>
+            Fechar
+          </Button>
+        ) : undefined}>
         <Form form={form}
           layout='vertical'
           onFinish={handleSubmit}>
@@ -145,38 +109,16 @@ export default function Detalhes({ id, onClose, children }) {
                 </Form.Item>
               </Col>
               <Col span={5}>
-                <Form.Item name='cpf'>
+                <Form.Item name='cpf'
+                  rules={[{ required: true, message: 'Campo obrigatório' }]}>
                   <Input maxLength={11}
                     placeholder='CPF' />
                 </Form.Item>
               </Col>
               <Col span={5}>
-                <Form.Item name='dtNascimento'>
+                <Form.Item name='dtNascimento'
+                  rules={[{ required: true, message: 'Campo obrigatório' }]}>
                   <DatePicker placeholder='Nascimento' />
-                </Form.Item>
-              </Col>
-              <Col span={8}>
-                <Form.Item name='endereco'>
-                  <Input placeholder='Endereço' />
-                </Form.Item>
-              </Col>
-              <Col span={6}>
-                <Form.Item name='cidade'>
-                  <Input placeholder='Cidade' />
-                </Form.Item>
-              </Col>
-              <Col span={3}>
-                <Form.Item name='numero'>
-                  <InputNumber min={0}
-                    precision={0}
-                    placeholder='Nº'
-                    controls={false}
-                    style={{ width: '100%' }} />
-                </Form.Item>
-              </Col>
-              <Col span={7}>
-                <Form.Item name='complemento'>
-                  <Input placeholder='Complemento' />
                 </Form.Item>
               </Col>
               <Col span={24}
@@ -189,7 +131,8 @@ export default function Detalhes({ id, onClose, children }) {
                 Métricas
               </Col>
               <Col span={4}>
-                <Form.Item name='peso'>
+                <Form.Item name='peso'
+                  rules={[{ required: true, message: 'Campo obrigatório' }]}>
                   <InputNumber min={0}
                     precision={1}
                     placeholder='Peso'
@@ -200,7 +143,8 @@ export default function Detalhes({ id, onClose, children }) {
                 </Form.Item>
               </Col>
               <Col span={3}>
-                <Form.Item name='altura'>
+                <Form.Item name='altura'
+                  rules={[{ required: true, message: 'Campo obrigatório' }]}>
                   <InputNumber min={0}
                     precision={0}
                     placeholder='Altura'
@@ -211,29 +155,23 @@ export default function Detalhes({ id, onClose, children }) {
                 </Form.Item>
               </Col>
               <Col span={17}>
-                <Form.Item name='objetivo'>
+                <Form.Item name='objetivo'
+                  rules={[{ required: true, message: 'Campo obrigatório' }]}>
                   <Input placeholder='Objetivo' />
                 </Form.Item>
               </Col>
-              {id ? (
-                <React.Fragment>
-                  <Col>
-                    <AdicionarPlano onClose={addPlano}>
-                      <Button>
-                        Adicionar Plano
-                      </Button>
-                    </AdicionarPlano>
-                  </Col>
-                  <Col span={24}>
-                    <Table size='small'
-                      columns={columns}
-                      dataSource={planos}
-                      pagination={false}
-                      rowKey='nome'
-                      scroll={{ x: 550 }} />
-                  </Col>
-                </React.Fragment>
-              ) : null}
+              <Col span={12}>
+                <Form.Item name='restricoes'
+                  rules={[{ required: true, message: 'Campo obrigatório' }]}>
+                  <Input placeholder='Restrições' />
+                </Form.Item>
+              </Col>
+              <Col span={12}>
+                <Form.Item name='preferencias'
+                  rules={[{ required: true, message: 'Campo obrigatório' }]}>
+                  <Input placeholder='Preferências' />
+                </Form.Item>
+              </Col>
             </Row>
           </Spin>
         </Form>

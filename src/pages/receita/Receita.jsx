@@ -32,7 +32,7 @@ export default function Receita() {
       setLoading(false);
       Modal.error({
         title: 'Erro',
-        content: err.message,
+        content: err,
       });
     });
   }

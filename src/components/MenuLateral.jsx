@@ -11,15 +11,19 @@ export default function MenuLateral() {
   const auth = useAuth();
   const itens = [
     {
-      key: 'dashboard',
+      key: 'app/dashboard',
       label: 'Dashboard',
     },
     {
-      key: 'pacientes',
+      key: 'app/pacientes',
       label: 'Pacientes',
     },
+    // {
+    //   key: 'app/plano-meta',
+    //   label: 'Planos',
+    // },
     {
-      key: 'receitas',
+      key: 'app/receitas',
       label: 'Receitas',
     },
     {
@@ -34,7 +38,7 @@ export default function MenuLateral() {
     if (!selectedKey) {
       setSelectedKey(window.location.pathname.substring(1));
     }
-  }, []);
+  }, [window.location.pathname.substring(1)]);
 
   const onSelect = (e) => {
     const { key } = e;

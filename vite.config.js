@@ -19,8 +19,11 @@ export default defineConfig({
   server: {
     port: FRONTEND_PORT,
     proxy: {
-      '/auth': PROXY_OPTIONS, //login no sistema
-      '/api': PROXY_OPTIONS, //exige autenticação
+      '/auth': PROXY_OPTIONS,
+      '/paciente': PROXY_OPTIONS,
+      '/plano-meta': PROXY_OPTIONS,
+      '/receita': PROXY_OPTIONS,
+      '/api': PROXY_OPTIONS,
     },
   },
 });

@@ -5,7 +5,7 @@ import request from '../../utils/request';
 import Item from './Item';
 import Detalhes from './Detalhes';
 
-export default function Paciente() {
+export default function PlanoMeta() {
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
   const [filtro, setFiltro] = useState('');
@@ -21,9 +21,8 @@ export default function Paciente() {
   const fetch = () => {
     setLoading(true);
 
-    request('/paciente', {
+    request('/plano-meta', {
       method: 'GET',
-      params: { filtro },
     }).then((data) => {
       setLoading(false);
       setData(data);
@@ -48,7 +47,7 @@ export default function Paciente() {
             fontWeight: 'bold',
             opacity: 0.7,
           }}>
-          Pacientes
+          Planos
         </Col>
         <Col xl={10}
           lg={12}
@@ -68,7 +67,7 @@ export default function Paciente() {
               loading={loading}
               type='primary'
               size='large'>
-              Novo Paciente
+              Novo Plano
             </Button>
           </Detalhes>
         </Col>

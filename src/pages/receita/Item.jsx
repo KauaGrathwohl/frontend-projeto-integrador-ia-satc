@@ -30,7 +30,7 @@ export default function Item({ data, fetch }) {
         </Col>
         &nbsp;|&nbsp;
         <Col>
-          Proteína: {data.proteina}g
+          Proteína: {data.proteinas}g
         </Col>
       </Row>
     </Card>

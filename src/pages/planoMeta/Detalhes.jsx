@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
-import { Row, Modal, Form, Spin, Button, Col, Input, InputNumber, message, Table } from 'antd';
+import { Row, Modal, Spin, Button, Col, Input, message, Table, Form } from 'antd';
 import DatePicker from '../../components/DatePicker';
 import request from '../../utils/request';
+import {cpfMask} from "../../utils/mask.js";
+import { PlusOutlined } from '@ant-design/icons';
 
 export default function Detalhes({ pacienteId, children }) {
   const [visible, setVisible] = useState(false);
+  const [loadingPaciente, setLoadingPaciente] = useState(false);
+  const [loadingPlanos, setLoadingPlanos] = useState(false);
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
   const [form] = Form.useForm();
@@ -35,24 +39,47 @@ export default function Detalhes({ pacienteId, children }) {
     setVisible(true);
 
     if (pacienteId) {
-      fetch();
+      fetchPaciente();
+      fetchPlanos();
     }
   }
 
-  const fetch = () => {
+  const fetchPlanos = () => {
     if (!pacienteId) {
       return;
     }
 
-    setLoading(true);
+    setLoadingPlanos(true);
 
     request(`/plano-meta/${pacienteId}`, {
       method: 'GET',
     }).then((data) => {
-      setLoading(false);
+      setLoadingPlanos(false);
       setData(data);
     }).catch((err) => {
-      setLoading(false);
+      setLoadingPlanos(false);
+      Modal.error({
+        title: 'Erro!',
+        content: err,
+      });
+    });
+  }
+
+  const fetchPaciente = () => {
+    if (!pacienteId) {
+      return;
+    }
+
+    setLoadingPaciente(true);
+
+    request(`/paciente/detalhes/${pacienteId}`, {
+      method: 'GET',
+    }).then((data) => {
+      setLoadingPaciente(false);
+      let body = {...data, cpf: cpfMask(data.cpf)}
+      form.setFieldsValue(body);
+    }).catch((err) => {
+      setLoadingPaciente(false);
       Modal.error({
         title: 'Erro!',
         content: err,
@@ -99,87 +126,58 @@ export default function Detalhes({ pacienteId, children }) {
         {children}
       </span>
       <Modal open={visible}
-        title='Cadastro do Plano'
+        title='Detalhes do paciente'
         okText='Salvar'
         centered
         destroyOnClose
         onCancel={handleClear}
-        onOk={form.submit}
-        width={1000}>
+        width={1000}
+        footer={<Button onClick={handleClear}>
+                  Fechar
+                </Button>}>
         <Form form={form}
-          layout='vertical'
-          onFinish={handleSubmit}>
-          <Spin spinning={loading}>
+              layout='vertical'>
+          <Spin spinning={loadingPaciente}>
             <Row gutter={[10, 5]}>
-              <Col span={18}>
-                <Form.Item name='nomePlano'
-                  label='Nome do Plano'
-                  rules={[{ required: true, message: 'Campo obrigatório' }]}>
-                  <Input maxLength={100} />
+              <Col span={14}>
+                <Form.Item name='nome'
+                           rules={[{ required: true, message: 'Campo obrigatório' }]}>
+                  <Input placeholder='Nome completo' disabled/>
                 </Form.Item>
               </Col>
-              <Col span={6}>
-                <Form.Item name='dtInicial'
-                  label='Data Inicial'
-                  rules={[{ required: true, message: 'Campo obrigatório' }]}>
-                  <DatePicker />
+              <Col span={5}>
+                <Form.Item name='cpf'
+                           rules={[{ required: true, message: 'Campo obrigatório' }]}>
+                  <Input maxLength={14}
+                         placeholder='CPF' disabled/>
                 </Form.Item>
               </Col>
-              <Col span={6}>
-                <Form.Item name='qtdDiariaCalorias'
-                  label='Qtd. Diária Calorias'
-                  rules={[{ required: true, message: 'Campo obrigatório' }]}>
-                  <InputNumber min={0}
-                    style={{ width: '100%' }}
-                    precision={2}
-                    controls={false}
-                    decimalSeparator=',' />
+              <Col span={5}>
+                <Form.Item name='dtNascimento'
+                           rules={[{ required: true, message: 'Campo obrigatório' }]}>
+                  <DatePicker placeholder='Nascimento' disabled/>
                 </Form.Item>
-              </Col>
-              <Col span={6}>
-                <Form.Item name='qtdDiariaCarboidratos'
-                  label='Qtd. Diária Carboidratos'
-                  rules={[{ required: true, message: 'Campo obrigatório' }]}>
-                  <InputNumber min={0}
-                    style={{ width: '100%' }}
-                    precision={2}
-                    controls={false}
-                    decimalSeparator=',' />
-                </Form.Item>
-              </Col>
-              <Col span={6}>
-                <Form.Item name='qtdDiariaGordura'
-                  label='Qtd. Diária Gordura'
-                  rules={[{ required: true, message: 'Campo obrigatório' }]}>
-                  <InputNumber min={0}
-                    style={{ width: '100%' }}
-                    precision={2}
-                    controls={false}
-                    decimalSeparator=',' />
-                </Form.Item>
-              </Col>
-              <Col span={6}>
-                <Form.Item name='qtdDiariaProteina'
-                  label='Qtd. Diária Proteínas'
-                  rules={[{ required: true, message: 'Campo obrigatório' }]}>
-                  <InputNumber min={0}
-                    style={{ width: '100%' }}
-                    precision={2}
-                    controls={false}
-                    decimalSeparator=',' />
-                </Form.Item>
-              </Col>
-              <Col span={24}
-                style={{ marginTop: 10 }}>
-                <Table size='small'
-                  columns={columns}
-                  dataSource={data}
-                  pagination={false}
-                  rowKey='id' />
               </Col>
             </Row>
           </Spin>
         </Form>
+        <Spin spinning={loadingPlanos}>
+          <Row justify={"end"}>
+            <Col span={4} style={{textAlign: 'right'}}>
+              <Button type="primary" icon={<PlusOutlined />}>Novo Plano</Button>
+            </Col>
+          </Row>
+          <Row>
+            <Col span={24}
+                 style={{ marginTop: 10 }}>
+              <Table size='small'
+                     columns={columns}
+                     dataSource={data}
+                     pagination={false}
+                     rowKey='id' />
+            </Col>
+          </Row>
+        </Spin>
       </Modal>
     </span>
   );

@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
-import { Row, Modal, Form, Spin, Col, Input, InputNumber, Button } from 'antd';
+import { Row, Modal, Form, Spin, Col, Input, InputNumber } from 'antd';
 import request from '../../utils/request';
 import DatePicker from '../../components/DatePicker';
+import { cpfMask } from '../../utils/mask.js'
 
 export default function Detalhes({ id, onClose, children }) {
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [form] = Form.useForm();
 
   const modal = (e) => {
@@ -28,7 +30,8 @@ export default function Detalhes({ id, onClose, children }) {
       method: 'GET',
     }).then((data) => {
       setLoading(false);
-      form.setFieldsValue(data);
+      let body = {...data, cpf: cpfMask(data.cpf)}
+      form.setFieldsValue(body);
     }).catch((err) => {
       setLoading(false);
       Modal.error({
@@ -38,8 +41,12 @@ export default function Detalhes({ id, onClose, children }) {
     });
   }
 
+  const removeCpfMask = (value) => {
+    return value.replace(/\D/g, '');
+  };
+
   const handleSubmit = (values) => {
-    setLoading(true);
+    setSaving(true);
 
     let url = '/paciente';
 
@@ -47,15 +54,17 @@ export default function Detalhes({ id, onClose, children }) {
       url += `/${id}`;
     }
 
+    let bodyParam = {...values, cpf: removeCpfMask(values.cpf), id: id};
+
     request(url, {
       method: id ? 'PUT' : 'POST',
-      body: { ...values, id },
+      body: bodyParam,
     }).then(() => {
-      setLoading(false);
+      setSaving(false);
       handleClear();
       onClose?.();
     }).catch((err) => {
-      setLoading(false);
+      setSaving(false);
       Modal.error({
         title: 'Erro!',
         content: err,
@@ -67,6 +76,10 @@ export default function Detalhes({ id, onClose, children }) {
     form.resetFields();
     setLoading(false);
     setVisible(false);
+  }
+
+  const handleChange = (e) => {
+    form.setFieldValue('cpf', cpfMask(e.target.value))
   }
 
   return (
@@ -82,13 +95,8 @@ export default function Detalhes({ id, onClose, children }) {
         destroyOnClose
         onCancel={handleClear}
         onOk={form.submit}
-        width={1000}
-        footer={id ? (
-          <Button type='primary'
-            onClick={handleClear}>
-            Fechar
-          </Button>
-        ) : undefined}>
+        confirmLoading={saving}
+        width={1000}>
         <Form form={form}
           layout='vertical'
           onFinish={handleSubmit}>
@@ -110,8 +118,9 @@ export default function Detalhes({ id, onClose, children }) {
               </Col>
               <Col span={5}>
                 <Form.Item name='cpf'
+                           onChange={handleChange}
                   rules={[{ required: true, message: 'Campo obrigatório' }]}>
-                  <Input maxLength={11}
+                  <Input maxLength={14}
                     placeholder='CPF' />
                 </Form.Item>
               </Col>
@@ -134,7 +143,8 @@ export default function Detalhes({ id, onClose, children }) {
                 <Form.Item name='peso'
                   rules={[{ required: true, message: 'Campo obrigatório' }]}>
                   <InputNumber min={0}
-                    precision={1}
+                    max={999.99}
+                    precision={2}
                     placeholder='Peso'
                     decimalSeparator=','
                     suffix='KG'
@@ -146,7 +156,8 @@ export default function Detalhes({ id, onClose, children }) {
                 <Form.Item name='altura'
                   rules={[{ required: true, message: 'Campo obrigatório' }]}>
                   <InputNumber min={0}
-                    precision={0}
+                    max={299.99}
+                    precision={2}
                     placeholder='Altura'
                     decimalSeparator=','
                     suffix='cm'

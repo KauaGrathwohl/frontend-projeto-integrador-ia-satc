@@ -1,36 +1,136 @@
-import React from 'react';
-import { Row } from 'antd';
+import React, { useState, useEffect } from 'react';
+import { Row, Col, Card, Modal, Spin } from 'antd'; // Importa o Spinner (Spin)
 import { useAuth } from '../../providers/AuthProvider';
 import { useTitle } from '../../hooks/useTitle';
+import request from "../../utils/request.js";
 
 export default function Dashboard() {
   const auth = useAuth();
-
+  const [pacientesCount, setPacientesCount] = useState(0);
+  const [receitasCount, setReceitasCount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
   useTitle('Dashboard');
+
+  // Função para buscar a quantidade de pacientes cadastrados
+
+  const fetchPacientesCount = () => {
+    setLoading(true);
+    request('/paciente/quantidade', {
+      method: 'GET',
+    })
+        .then((data) => {
+          setPacientesCount(data);
+          setLoading(false);
+        })
+        .catch((err) => {
+          setLoading(false);
+          setError(err);
+          Modal.error({
+            title: 'Erro',
+            content: err.message || 'Erro ao buscar dados',
+          });
+        });
+  };
+
+  // Função para buscar a quantidade de receitas cadastradas
+
+  const fetchReceitasCount = () => {
+    setLoading(true);
+    request('/receita/quantidade', {
+      method: 'GET',
+    })
+        .then((data) => {
+          setReceitasCount(data);
+          setLoading(false);
+        })
+        .catch((err) => {
+          setLoading(false);
+          setError(err);
+          Modal.error({
+            title: 'Erro',
+            content: err.message || 'Erro ao buscar dados',
+          });
+        });
+  }
+
+  useEffect(() => {
+    if (auth.isAuthenticated()) {
+      fetchPacientesCount();
+      fetchReceitasCount()
+    }
+  }, [auth]);
 
   if (!auth.isAuthenticated()) {
     return null;
   }
 
   return (
-    <Row gutter={[10, 5]}
-      justify='center'
-      align='middle'
-      style={{ marginTop: '10%' }}>
-      {/* <Col span={24}
-        style={{
-          fontSize: 70,
-          textAlign: 'center',
-          color: '#65BE8E'
-        }}>
-        Bem vindo!
-      </Col>
-      <Col style={{ fontSize: 30, marginRight: 25, color: '#65BE8E' }}>
-        <a onClick={() => navigate('/app/pacientes')}>Pacientes</a>
-      </Col>
-      <Col style={{ fontSize: 30, marginLeft: 25, color: '#65BE8E' }}>
-        <a onClick={() => navigate('/app/receitas')}>Receitas</a>
-      </Col> */}
-    </Row>
+      <Row
+          gutter={[16, 16]}
+          justify="center"
+          align="middle"
+          style={{
+            minHeight: '100vh',
+            display: 'flex',
+            flexDirection: 'row',
+            flexWrap: 'wrap',
+            paddingLeft: '2%',
+            paddingRight: '2%',
+          }}
+      >
+        <Col xs={24} sm={12} md={6}>
+          <Card
+              title="Pacientes cadastrados"
+              bordered={false}
+              style={{
+                textAlign: 'center',
+                padding: '20px',
+                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                borderRadius: '8px',
+              }}
+          >
+            {loading ? (
+                <Spin /> // Exibe um spinner enquanto a requisição está sendo processada
+            ) : (
+                <h2>{pacientesCount}</h2> // Exibe o número de pacientes
+            )}
+          </Card>
+        </Col>
+
+        <Col xs={24} sm={12} md={6}>
+          <Card
+              title="Receitas cadastradas"
+              bordered={false}
+              style={{
+                textAlign: 'center',
+                padding: '20px',
+                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                borderRadius: '8px',
+              }}
+          >
+              {loading ? (
+                  <Spin />
+              ) : (
+                  <h2>{receitasCount}</h2>
+              )}
+          </Card>
+        </Col>
+
+        <Col xs={24} sm={12} md={6}>
+          <Card
+              title="Planos cadastrados"
+              bordered={false}
+              style={{
+                textAlign: 'center',
+                padding: '20px',
+                boxShadow: '0 4px 8px rgba(0, 0, 0, 0.1)',
+                borderRadius: '8px',
+              }}
+          >
+            <h2>0</h2>
+          </Card>
+        </Col>
+      </Row>
   );
 }

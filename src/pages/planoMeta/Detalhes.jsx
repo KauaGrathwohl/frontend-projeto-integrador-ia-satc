@@ -1,17 +1,19 @@
 import React, { useState } from 'react';
-import { Row, Modal, Spin, Button, Col, Input, message, Table, Form } from 'antd';
-import DatePicker from '../../components/DatePicker';
-import request from '../../utils/request';
-import {cpfMask} from "../../utils/mask.js";
+import { Row, Modal, Spin, Button, Col, Input, message, Table, Form, DatePicker } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
+import { cpfMask } from "../../utils/mask.js";
+import { useNavigate } from 'react-router-dom';  // Usando o useNavigate
 
 export default function Detalhes({ pacienteId, children }) {
-  const [visible, setVisible] = useState(false);
+  const [visible, setVisible] = useState(false);  // Modal original
+  const [visibleNovoPlano, setVisibleNovoPlano] = useState(false);  // Novo modal para o plano
   const [loadingPaciente, setLoadingPaciente] = useState(false);
   const [loadingPlanos, setLoadingPlanos] = useState(false);
-  const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
-  const [form] = Form.useForm();
+  const [formPaciente] = Form.useForm();
+  const [formPlano] = Form.useForm();  // Formulário para o novo plano
+  const navigate = useNavigate();
+
   const columns = [
     {
       title: 'Nome',
@@ -34,128 +36,121 @@ export default function Detalhes({ pacienteId, children }) {
     },
   ];
 
+  // Abre o modal principal (Detalhes do paciente)
   const modal = (e) => {
     e.stopPropagation();
     setVisible(true);
-
     if (pacienteId) {
       fetchPaciente();
       fetchPlanos();
     }
-  }
+  };
 
+  // Função para buscar os planos
   const fetchPlanos = () => {
-    if (!pacienteId) {
-      return;
-    }
+    if (!pacienteId) return;
 
     setLoadingPlanos(true);
 
+    // Substitua esta URL pela URL correta para buscar os planos
+
     request(`/plano-meta/${pacienteId}`, {
       method: 'GET',
-    }).then((data) => {
-      setLoadingPlanos(false);
-      setData(data);
-    }).catch((err) => {
-      setLoadingPlanos(false);
-      Modal.error({
-        title: 'Erro!',
-        content: err,
-      });
-    });
-  }
+    })
+        .then((data) => {
+          setLoadingPlanos(false);
+          setData(data);
+        })
+        .catch((err) => {
+          setLoadingPlanos(false);
+          Modal.error({
+            title: 'Erro!',
+            content: err,
+          });
+        });
+  };
+
+  // Função para buscar os detalhes do paciente
 
   const fetchPaciente = () => {
-    if (!pacienteId) {
-      return;
-    }
+    if (!pacienteId) return;
 
     setLoadingPaciente(true);
 
+    // Substitua esta URL pela URL correta para buscar o paciente
+
     request(`/paciente/detalhes/${pacienteId}`, {
       method: 'GET',
-    }).then((data) => {
-      setLoadingPaciente(false);
-      let body = {...data, cpf: cpfMask(data.cpf)}
-      form.setFieldsValue(body);
-    }).catch((err) => {
-      setLoadingPaciente(false);
-      Modal.error({
-        title: 'Erro!',
-        content: err,
-      });
-    });
-  }
+    })
+        .then((data) => {
+          setLoadingPaciente(false);
+          let body = { ...data, cpf: cpfMask(data.cpf) };
+          formPaciente.setFieldsValue(body);
+        })
+        .catch((err) => {
+          setLoadingPaciente(false);
+          Modal.error({
+            title: 'Erro!',
+            content: err,
+          });
+        });
+  };
 
-  const handleSubmit = (values) => {
-    setLoading(true);
+  // Função para abrir o modal do novo plano
+  const handleNovoPlanoClick = () => {
+    setVisibleNovoPlano(true);
+  };
 
-    if (!pacienteId) {
-      message.error('Paciente não informado');
+  // Função de cancelamento do modal do novo plano
+  const handleCancelNovoPlano = () => {
+    setVisibleNovoPlano(false);
+    formPlano.resetFields();
+  };
 
-      return;
-    }
-
-    request(`/plano-meta/${pacienteId}`, {
-      method: 'POST',
-      body: { ...values },
-    }).then(() => {
-      setLoading(false);
-      form.resetFields();
-      fetch();
-    }).catch((err) => {
-      setLoading(false);
-      Modal.error({
-        title: 'Erro!',
-        content: err,
-      });
-    });
-  }
+  // Função de submit para o novo plano
+  const handleSubmitNovoPlano = (values) => {
+    console.log("Plano submetido:", values);
+    setVisibleNovoPlano(false);
+    // Ação após enviar os dados, por exemplo, navegar para outra tela ou fazer algo
+  };
 
   const handleClear = () => {
-    form.resetFields();
-    setLoading(false);
+    formPaciente.resetFields();
     setVisible(false);
     setData([]);
-  }
+  };
 
   return (
-    <span>
-      <span onClick={modal}
-        style={{ cursor: 'pointer' }}>
+      <span>
+      <span onClick={modal} style={{ cursor: 'pointer' }}>
         {children}
       </span>
-      <Modal open={visible}
-        title='Detalhes do paciente'
-        okText='Salvar'
-        centered
-        destroyOnClose
-        onCancel={handleClear}
-        width={1000}
-        footer={<Button onClick={handleClear}>
-                  Fechar
-                </Button>}>
-        <Form form={form}
-              layout='vertical'>
+      <Modal
+          open={visible}
+          title="Detalhes do paciente"
+          okText="Salvar"
+          centered
+          destroyOnClose
+          onCancel={handleClear}
+          width={1000}
+          footer={<Button onClick={handleClear}>Fechar</Button>}
+      >
+        <Form form={formPaciente} layout="vertical">
           <Spin spinning={loadingPaciente}>
             <Row gutter={[10, 5]}>
               <Col span={14}>
-                <Form.Item name='nome'
-                           rules={[{ required: true, message: 'Campo obrigatório' }]}>
-                  <Input placeholder='Nome completo' disabled/>
+                <Form.Item name="nome" rules={[{ required: true, message: 'Campo obrigatório' }]}>
+                  <Input placeholder="Nome completo" disabled />
                 </Form.Item>
               </Col>
               <Col span={5}>
-                <Form.Item name='cpf'
-                           rules={[{ required: true, message: 'Campo obrigatório' }]}>
-                  <Input maxLength={14}
-                         placeholder='CPF' disabled/>
+                <Form.Item name="cpf" rules={[{ required: true, message: 'Campo obrigatório' }]}>
+                  <Input maxLength={14} placeholder="CPF" disabled />
                 </Form.Item>
               </Col>
               <Col span={5}>
-                <Form.Item name='dtNascimento'
-                           rules={[{ required: true, message: 'Campo obrigatório' }]}>
-                  <DatePicker placeholder='Nascimento' disabled/>
+                <Form.Item name="dtNascimento" rules={[{ required: true, message: 'Campo obrigatório' }]}>
+                  <DatePicker placeholder="Nascimento" disabled />
                 </Form.Item>
               </Col>
             </Row>
@@ -163,21 +158,95 @@ export default function Detalhes({ pacienteId, children }) {
         </Form>
         <Spin spinning={loadingPlanos}>
           <Row justify={"end"}>
-            <Col span={4} style={{textAlign: 'right'}}>
-              <Button type="primary" icon={<PlusOutlined />}>Novo Plano</Button>
+            <Col span={4} style={{ textAlign: 'right' }}>
+              <Button type="primary" icon={<PlusOutlined />} onClick={handleNovoPlanoClick}>
+                Novo Plano
+              </Button>
             </Col>
           </Row>
           <Row>
-            <Col span={24}
-                 style={{ marginTop: 10 }}>
-              <Table size='small'
-                     columns={columns}
-                     dataSource={data}
-                     pagination={false}
-                     rowKey='id' />
+            <Col span={24} style={{ marginTop: 10 }}>
+              <Table size="small" columns={columns} dataSource={data} pagination={false} rowKey="id" />
             </Col>
           </Row>
         </Spin>
+      </Modal>
+
+        {/* Modal para o Novo Plano */}
+        <Modal
+            open={visibleNovoPlano}
+            title="Novo Plano"
+            okText="Próximo"
+            onCancel={handleCancelNovoPlano}
+            onOk={() => formPlano.submit()}
+            width={600}
+            footer={[
+              <Button key="back" onClick={handleCancelNovoPlano}>
+                Cancelar
+              </Button>,
+              <Button key="submit" type="primary" onClick={() => formPlano.submit()}>
+                Próximo
+              </Button>,
+            ]}
+        >
+        <Form form={formPlano} layout="vertical" onFinish={handleSubmitNovoPlano}>
+          <Row gutter={[10, 5]}>
+            <Col span={24}>
+              <Form.Item
+                  name="nome"
+                  label="Nome do Plano"
+                  rules={[{ required: true, message: 'Campo obrigatório' }]}
+              >
+                <Input placeholder="Nome do Plano" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                  name="dataInicio"
+                  label="Data Inicial"
+                  rules={[{ required: true, message: 'Campo obrigatório' }]}
+              >
+                <DatePicker placeholder="Data Inicial" style={{ width: '100%' }} />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                  name="calorias"
+                  label="Calorias"
+                  rules={[{ required: true, message: 'Campo obrigatório' }]}
+              >
+                <Input placeholder="Calorias" type="number" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                  name="carboidratos"
+                  label="Carboidratos"
+                  rules={[{ required: true, message: 'Campo obrigatório' }]}
+              >
+                <Input placeholder="Carboidratos" type="number" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                  name="gordura"
+                  label="Gordura"
+                  rules={[{ required: true, message: 'Campo obrigatório' }]}
+              >
+                <Input placeholder="Gordura" type="number" />
+              </Form.Item>
+            </Col>
+            <Col span={12}>
+              <Form.Item
+                  name="proteina"
+                  label="Proteína"
+                  rules={[{ required: true, message: 'Campo obrigatório' }]}
+              >
+                <Input placeholder="Proteína" type="number" />
+              </Form.Item>
+            </Col>
+          </Row>
+        </Form>
       </Modal>
     </span>
   );

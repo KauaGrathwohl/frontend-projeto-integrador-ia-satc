@@ -124,155 +124,152 @@ export default function Detalhes({ id, onClose, children }) {
         };
 
         if (gerarModoPreparoIA) {
-      updatedFields.preparo = response.preparo;
-  updatedFields.gramas = response.gramasPorPorcao;
-}
+          updatedFields.preparo = response.preparo;
+          updatedFields.gramas = response.gramasPorPorcao;
+        }
+        form.setFieldsValue(updatedFields);
+      })
+      .catch((error) => {
+        setLoading(false);
+        Modal.error({
+          title: 'Erro ao calcular os dados',
+          content: 'Ocorreu um erro ao processar a receita. Tente novamente.',
+        });
+      });
+  };
 
-form.setFieldsValue(updatedFields);
-})
-.catch((error) => {
-setLoading(false);
-Modal.error({
-  title: 'Erro ao calcular os dados',
-  content: 'Ocorreu um erro ao processar a receita. Tente novamente.',
-});
-});
-};
+  return (
+    <span>
+      <span onClick={modal}
+        style={{ cursor: 'pointer' }}>
+        {children}
+      </span>
+      <Modal open={visible}
+        title="Cadastro de Receita"
+        okText="Salvar"
+        centered
+        destroyOnClose
+        onCancel={handleClear}
+        onOk={form.submit}
+        width={850}>
+        <Form form={form} layout="vertical" onFinish={handleSubmit}>
+          <Spin spinning={loading}>
+            <Row gutter={[10, 5]} justify="center">
+              <Col span={24} style={{ marginBottom: 10 }}>
+                <Form.Item name="nome">
+                  <Input placeholder="Nome" />
+                </Form.Item>
+              </Col>
 
-return (
-<span>
-<span onClick={modal} style={{ cursor: 'pointer' }}>
-{children}
-</span>
-<Modal
-open={visible}
-title="Cadastro de Receita"
-okText="Salvar"
-centered
-destroyOnClose
-onCancel={handleClear}
-onOk={form.submit}
-width={850}
->
-<Form form={form} layout="vertical" onFinish={handleSubmit}>
-  <Spin spinning={loading}>
-    <Row gutter={[10, 5]} justify="center">
-      <Col span={24} style={{ marginBottom: 10 }}>
-        <Form.Item name="nome">
-          <Input placeholder="Nome" />
-        </Form.Item>
-      </Col>
+              {ingredientes.map((el, i) => (
+                <Col key={i} span={24}>
+                  <Row gutter={[10, 5]}>
+                    <Col span={14}>
+                      <Input
+                        placeholder="Ingrediente"
+                        value={el.ingrediente}
+                        onChange={(e) =>
+                          changeIngrediente(e.target.value, 'ingrediente', i)
+                        }
+                      />
+                    </Col>
+                    <Col span={5}>
+                      <InputNumber
+                        placeholder="Qtd."
+                        value={el.quantidade}
+                        style={{ width: '100%' }}
+                        onChange={(value) =>
+                          changeIngrediente(value, 'quantidade', i)
+                        }
+                      />
+                    </Col>
+                    <Col span={4}>
+                      <Input
+                        placeholder="UN"
+                        maxLength={2}
+                        value={el.unidade}
+                        onChange={(e) =>
+                          changeIngrediente(e.target.value, 'un', i)
+                        }
+                      />
+                    </Col>
+                    <Col span={1}>
+                      <Button
+                        danger
+                        icon={<DeleteOutlined />}
+                        onClick={() => removeIngrediente(i)}
+                      />
+                    </Col>
+                  </Row>
+                </Col>
+              ))}
 
-      {ingredientes.map((el, i) => (
-        <Col key={i} span={24}>
-          <Row gutter={[10, 5]}>
-            <Col span={14}>
-              <Input
-                placeholder="Ingrediente"
-                value={el.ingrediente}
-                onChange={(e) =>
-                  changeIngrediente(e.target.value, 'ingrediente', i)
-                }
-              />
-            </Col>
-            <Col span={5}>
-              <InputNumber
-                placeholder="Qtd."
-                value={el.quantidade}
-                style={{ width: '100%' }}
-                onChange={(value) =>
-                  changeIngrediente(value, 'quantidade', i)
-                }
-              />
-            </Col>
-            <Col span={4}>
-              <Input
-                placeholder="UN"
-                maxLength={2}
-                value={el.unidade}
-                onChange={(e) =>
-                  changeIngrediente(e.target.value, 'un', i)
-                }
-              />
-            </Col>
-            <Col span={1}>
-              <Button
-                danger
-                icon={<DeleteOutlined />}
-                onClick={() => removeIngrediente(i)}
-              />
-            </Col>
-          </Row>
-        </Col>
-      ))}
+              <Col style={{ marginTop: 10 }}>
+                <Button onClick={addIngrediente}>Adicionar Ingrediente</Button>
+              </Col>
 
-      <Col style={{ marginTop: 10 }}>
-        <Button onClick={addIngrediente}>Adicionar Ingrediente</Button>
-      </Col>
+              <Col span={24} style={{ marginTop: 10, textAlign: 'left' }}>
+                <Checkbox
+                  checked={gerarModoPreparoIA}
+                  onChange={(e) => setGerarModoPreparoIA(e.target.checked)}
+                >
+                  Gerar modo de preparo por IA
+                </Checkbox>
+              </Col>
 
-      <Col span={24} style={{ marginTop: 10, textAlign: 'left' }}>
-        <Checkbox
-          checked={gerarModoPreparoIA}
-          onChange={(e) => setGerarModoPreparoIA(e.target.checked)}
-        >
-          Gerar modo de preparo por IA
-        </Checkbox>
-      </Col>
+              <Col
+                span={24}
+                style={{ fontSize: 20, fontWeight: 'bold', opacity: 0.8 }}
+              >
+                Modo de Preparo
+              </Col>
+              <Col span={24}>
+                <Form.Item name="preparo">
+                  <Input.TextArea rows={10} />
+                </Form.Item>
+              </Col>
 
-      <Col
-        span={24}
-        style={{ fontSize: 20, fontWeight: 'bold', opacity: 0.8 }}
-      >
-        Modo de Preparo
-      </Col>
-      <Col span={24}>
-        <Form.Item name="preparo">
-          <Input.TextArea rows={10} />
-        </Form.Item>
-      </Col>
+              <Row gutter={[21, 21]} justify="space-between">
+                <Col span={6}>
+                  <Form.Item name="proteinas" label="Proteínas (g)">
+                    <InputNumber min={0} precision={2} style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item name="gorduras" label="Gorduras (g)">
+                    <InputNumber min={0} precision={2} style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item name="carboidratos" label="Carboidratos (g)">
+                    <InputNumber min={0} precision={2} style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+                <Col span={6}>
+                  <Form.Item name="calorias" label="Calorias (kcal)">
+                    <InputNumber min={0} precision={2} style={{ width: '100%' }} />
+                  </Form.Item>
+                </Col>
+              </Row>
 
-      <Row gutter={[21, 21]} justify="space-between">
-        <Col span={6}>
-          <Form.Item name="proteinas" label="Proteínas (g)">
-            <InputNumber min={0} precision={2} style={{ width: '100%' }} />
-          </Form.Item>
-        </Col>
-        <Col span={6}>
-          <Form.Item name="gorduras" label="Gorduras (g)">
-            <InputNumber min={0} precision={2} style={{ width: '100%' }} />
-          </Form.Item>
-        </Col>
-        <Col span={6}>
-          <Form.Item name="carboidratos" label="Carboidratos (g)">
-            <InputNumber min={0} precision={2} style={{ width: '100%' }} />
-          </Form.Item>
-        </Col>
-        <Col span={6}>
-          <Form.Item name="calorias" label="Calorias (kcal)">
-            <InputNumber min={0} precision={2} style={{ width: '100%' }} />
-          </Form.Item>
-        </Col>
-      </Row>
+              <Col span={24} style={{ marginTop: 10 }}>
+                <Form.Item name="gramas" label="Gramas por Porção (g)">
+                  <InputNumber min={0} precision={2} style={{ width: '20%' }} />
+                </Form.Item>
+              </Col>
 
-      <Col span={24} style={{ marginTop: 10 }}>
-        <Form.Item name="gramas" label="Gramas por Porção (g)">
-          <InputNumber min={0} precision={2} style={{ width: '20%' }} />
-        </Form.Item>
-      </Col>
-
-      <Col span={24} style={{ marginTop: 10 }}>
-        <Button
-          type="default"
-          style={{ width: '100px' }}
-          onClick={handleCalculoIA}
-        >
-          Cálculo IA
-        </Button>
-      </Col>
-    </Row>
-  </Spin>
-</Form>
-</Modal>
-</span>
-);
+              <Col span={24} style={{ marginTop: 10 }}>
+                <Button
+                  type="default"
+                  style={{ width: '100px' }}
+                  onClick={handleCalculoIA}>
+                  Cálculo IA
+                </Button>
+              </Col>
+            </Row>
+          </Spin>
+        </Form>
+      </Modal>
+    </span>
+  );
 }

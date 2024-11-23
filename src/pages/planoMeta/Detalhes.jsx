@@ -2,16 +2,17 @@ import React, { useState } from 'react';
 import { Row, Modal, Spin, Button, Col, Input, message, Table, Form, DatePicker } from 'antd';
 import { PlusOutlined } from '@ant-design/icons';
 import { cpfMask } from "../../utils/mask.js";
-import { useNavigate } from 'react-router-dom';  // Usando o useNavigate
+import { useNavigate } from 'react-router-dom';
+import request from "../../utils/request.js";
 
 export default function Detalhes({ pacienteId, children }) {
-  const [visible, setVisible] = useState(false);  // Modal original
-  const [visibleNovoPlano, setVisibleNovoPlano] = useState(false);  // Novo modal para o plano
+  const [visible, setVisible] = useState(false);
+  const [visibleNovoPlano, setVisibleNovoPlano] = useState(false);
   const [loadingPaciente, setLoadingPaciente] = useState(false);
   const [loadingPlanos, setLoadingPlanos] = useState(false);
   const [data, setData] = useState([]);
   const [formPaciente] = Form.useForm();
-  const [formPlano] = Form.useForm();  // Formulário para o novo plano
+  const [formPlano] = Form.useForm();
   const navigate = useNavigate();
 
   const columns = [
@@ -36,7 +37,6 @@ export default function Detalhes({ pacienteId, children }) {
     },
   ];
 
-  // Abre o modal principal (Detalhes do paciente)
   const modal = (e) => {
     e.stopPropagation();
     setVisible(true);
@@ -46,13 +46,10 @@ export default function Detalhes({ pacienteId, children }) {
     }
   };
 
-  // Função para buscar os planos
   const fetchPlanos = () => {
     if (!pacienteId) return;
 
     setLoadingPlanos(true);
-
-    // Substitua esta URL pela URL correta para buscar os planos
 
     request(`/plano-meta/${pacienteId}`, {
       method: 'GET',
@@ -70,14 +67,10 @@ export default function Detalhes({ pacienteId, children }) {
         });
   };
 
-  // Função para buscar os detalhes do paciente
-
   const fetchPaciente = () => {
     if (!pacienteId) return;
 
     setLoadingPaciente(true);
-
-    // Substitua esta URL pela URL correta para buscar o paciente
 
     request(`/paciente/detalhes/${pacienteId}`, {
       method: 'GET',
@@ -96,22 +89,18 @@ export default function Detalhes({ pacienteId, children }) {
         });
   };
 
-  // Função para abrir o modal do novo plano
   const handleNovoPlanoClick = () => {
     setVisibleNovoPlano(true);
   };
 
-  // Função de cancelamento do modal do novo plano
   const handleCancelNovoPlano = () => {
     setVisibleNovoPlano(false);
     formPlano.resetFields();
   };
 
-  // Função de submit para o novo plano
   const handleSubmitNovoPlano = (values) => {
     console.log("Plano submetido:", values);
     setVisibleNovoPlano(false);
-    // Ação após enviar os dados, por exemplo, navegar para outra tela ou fazer algo
   };
 
   const handleClear = () => {
@@ -150,7 +139,7 @@ export default function Detalhes({ pacienteId, children }) {
               </Col>
               <Col span={5}>
                 <Form.Item name="dtNascimento" rules={[{ required: true, message: 'Campo obrigatório' }]}>
-                  <DatePicker placeholder="Nascimento" disabled />
+                  <Input placeholder="Nascimento" disabled />
                 </Form.Item>
               </Col>
             </Row>
@@ -172,7 +161,6 @@ export default function Detalhes({ pacienteId, children }) {
         </Spin>
       </Modal>
 
-        {/* Modal para o Novo Plano */}
         <Modal
             open={visibleNovoPlano}
             title="Novo Plano"

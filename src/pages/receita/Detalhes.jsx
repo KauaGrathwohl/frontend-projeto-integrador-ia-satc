@@ -1,14 +1,15 @@
 import React, { useState } from 'react';
-import { Row, Modal, Form, Spin, Col, Input, Button, InputNumber, Checkbox } from 'antd';
+import { Row, Modal, Form, Spin, Col, Input, Button, InputNumber, Checkbox, Select } from 'antd';
 import { DeleteOutlined } from '@ant-design/icons';
 import request from '../../utils/request';
 
 export default function Detalhes({ id, onClose, children }) {
   const [visible, setVisible] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [ingredientes, setIngredientes] = useState([]);
+  const [ingredientes, setIngredientes] = useState([{ unidade: 'u'}]);
   const [form] = Form.useForm();
   const [gerarModoPreparoIA, setGerarModoPreparoIA] = useState(false);
+  const [isDisabledCalculoIa, setIsDisabledCalculoIa] = useState(true);
 
   const modal = (e) => {
     e.stopPropagation();
@@ -74,7 +75,7 @@ export default function Detalhes({ id, onClose, children }) {
   };
 
   const addIngrediente = () => {
-    setIngredientes([...ingredientes, {}]);
+    setIngredientes([...ingredientes, { unidade: 'ml' }]);
   };
 
   const changeIngrediente = (value, key, index) => {
@@ -89,53 +90,76 @@ export default function Detalhes({ id, onClose, children }) {
     setIngredientes([...nIngredientes]);
   };
 
+  const handleOnChangeCheckbox = (e) => {
+    if (!e.target.checked && !form.getFieldValue('preparo').length) {
+      setIsDisabledCalculoIa(true);
+    } else if (!e.target.checked && form.getFieldValue('preparo').length) {
+      setIsDisabledCalculoIa(false);
+    } else if (e.target.checked) {
+      setIsDisabledCalculoIa(false);
+    }
+    setGerarModoPreparoIA(e.target.checked);
+  }
+
+  const handleOnChangeModoPreparo = () => {
+    if (!gerarModoPreparoIA && !form.getFieldValue('preparo').length) {
+      setIsDisabledCalculoIa(true);
+    } else if (!gerarModoPreparoIA && form.getFieldValue('preparo').length) {
+      setIsDisabledCalculoIa(false);
+    } else if (gerarModoPreparoIA) {
+      setIsDisabledCalculoIa(false);
+    }
+  }
+
   const handleCalculoIA = () => {
     const values = form.getFieldsValue();
 
+    console.log(gerarModoPreparoIA)
     const payload = {
       nome: values.nome,
+      gerarModoPreparo: gerarModoPreparoIA,
       ingredientes: ingredientes.map((ingrediente) => ({
         nome: ingrediente.ingrediente,
         quantidade: ingrediente.quantidade,
         unidade: ingrediente.unidade,
       })),
-      preparo: values.preparo,
-      gramasPorPorcao: values.gramas,
-      tipoRefeicao: values.tipo,
+      modoPreparo: values.preparo,
+      gramasPorPorcao: values.gramas
     };
 
     setLoading(true);
+    let url = '/receita/calcular';
 
-    request('https://run.mocky.io/v3/c3e6ba05-74fc-40e3-bb3c-14fd2faba708', {
+    request(url, {
       method: 'POST',
       body: JSON.stringify(payload),
       headers: {
         'Content-Type': 'application/json',
-      },
+      }
     })
-        .then((response) => {
-          setLoading(false);
+      .then((response) => {
+        setLoading(false);
 
-          const updatedFields = {
-            proteinas: response.macros.proteinas,
-            gorduras: response.macros.gorduras,
-            carboidratos: response.macros.carboidratos,
-            calorias: response.macros.calorias,
-          };
+        const updatedFields = {
+          proteinas: response.macronutrientes.proteinas,
+          gorduras: response.macronutrientes.gorduras,
+          carboidratos: response.macronutrientes.carboidratos,
+          calorias: response.macronutrientes.calorias,
+        };
 
-          if (gerarModoPreparoIA) {
-            updatedFields.preparo = response.preparo;
-            updatedFields.gramas = response.gramasPorPorcao;
-          }
-          form.setFieldsValue(updatedFields);
-        })
-        .catch((error) => {
-          setLoading(false);
-          Modal.error({
-            title: 'Erro ao calcular os dados',
-            content: 'Ocorreu um erro ao processar a receita. Tente novamente.',
-          });
+        if (gerarModoPreparoIA) {
+          updatedFields.preparo = response.modoPreparo;
+          updatedFields.gramas = response.gramasPorPorcao;
+        }
+        form.setFieldsValue(updatedFields);
+      })
+      .catch((error) => {
+        setLoading(false);
+        Modal.error({
+          title: 'Erro ao calcular os dados',
+          content: 'Ocorreu um erro ao processar a receita. Tente novamente.',
         });
+      });
   };
 
   return (
@@ -154,7 +178,7 @@ export default function Detalhes({ id, onClose, children }) {
           width={850}
           footer={[
             <Row justify="space-between" style={{ width: '100%' }}>
-              <Button key="calculoIA" type="default" onClick={handleCalculoIA}>
+              <Button key="calculoIA" type="default" onClick={handleCalculoIA} disabled={isDisabledCalculoIa}>
                 Cálculo IA
               </Button>
               <div>
@@ -165,54 +189,63 @@ export default function Detalhes({ id, onClose, children }) {
                   Salvar
                 </Button>
               </div>
-            </Row>,
+            </Row>
           ]}
       >
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
           <Spin spinning={loading}>
-            <Row gutter={[10, 5]} justify="center">
+            <Row gutter={[10, 5]} justify="left">
               <Col span={24} style={{ marginBottom: 10 }}>
-                <Form.Item name="nome">
+                <Form.Item name="nome" rules={[{ required: true, message: 'Campo obrigatório' }]}>
                   <Input placeholder="Nome" />
                 </Form.Item>
               </Col>
-
+              <Col style={{ fontSize: 20, fontWeight: 'bold', opacity: 0.8 }}>
+                Ingredientes:
+              </Col>
               {ingredientes.map((el, i) => (
                   <Col key={i} span={24}>
                     <Row gutter={[10, 5]}>
                       <Col span={14}>
-                        <Input
-                            placeholder="Ingrediente"
-                            value={el.ingrediente}
-                            onChange={(e) =>
-                                changeIngrediente(e.target.value, 'ingrediente', i)
-                            }
-                        />
+                        <Form.Item name={`ingrediente-${i}`} rules={[{ required: true, message: 'Campo obrigatório' }]}>
+                          <Input
+                              placeholder="Ingrediente"
+                              value={el.ingrediente}
+                              onChange={(e) =>
+                                  changeIngrediente(e.target.value, 'ingrediente', i)
+                              }
+                          />
+                        </Form.Item>
                       </Col>
                       <Col span={5}>
-                        <InputNumber
-                            placeholder="Qtd."
-                            value={el.quantidade}
-                            style={{ width: '100%' }}
-                            onChange={(value) =>
-                                changeIngrediente(value, 'quantidade', i)
-                            }
-                        />
+                        <Form.Item name={`quantidade-${i}`} rules={[{ required: true, message: 'Campo obrigatório' }]}>
+                          <InputNumber
+                              placeholder="Qtd."
+                              value={el.quantidade}
+                              style={{ width: '100%' }}
+                              onChange={(value) =>
+                                  changeIngrediente(value, 'quantidade', i)
+                              }
+                          />
+                        </Form.Item>
                       </Col>
                       <Col span={4}>
-                        <Input
-                            placeholder="UN"
-                            maxLength={2}
-                            value={el.unidade}
-                            onChange={(e) =>
-                                changeIngrediente(e.target.value, 'un', i)
-                            }
+                        <Select
+                          value={el.unidade}
+                          onChange={(e) => changeIngrediente(e, 'unidade', i)}
+                          style={{ width: 120 }}
+                          options={[
+                            { value: 'u', label: 'Unidade' },
+                            { value: 'ml', label: 'ml' },
+                            { value: 'g', label: 'g' }
+                          ]}
                         />
                       </Col>
                       <Col span={1}>
                         <Button
                             danger
                             icon={<DeleteOutlined />}
+                            disabled={ingredientes.length === 1}
                             onClick={() => removeIngrediente(i)}
                         />
                       </Col>
@@ -220,7 +253,7 @@ export default function Detalhes({ id, onClose, children }) {
                   </Col>
               ))}
 
-              <Col style={{ marginTop: 10 }}>
+              <Col style={{ marginTop: 10 }} offset={9}>
                 <Button onClick={addIngrediente}>Adicionar Ingrediente</Button>
               </Col>
 
@@ -232,7 +265,7 @@ export default function Detalhes({ id, onClose, children }) {
                   <Col>
                     <Checkbox
                         checked={gerarModoPreparoIA}
-                        onChange={(e) => setGerarModoPreparoIA(e.target.checked)}
+                        onChange={(e) => handleOnChangeCheckbox(e)}
                     >
                       Gerar modo de preparo por IA
                     </Checkbox>
@@ -241,34 +274,34 @@ export default function Detalhes({ id, onClose, children }) {
               </Col>
 
               <Col span={24}>
-                <Form.Item name="preparo">
-                  <Input.TextArea rows={10} />
+                <Form.Item name="preparo" rules={[{ required: true, message: 'Campo obrigatório' }]}>
+                  <Input.TextArea rows={10} disabled={gerarModoPreparoIA} onChange={() => handleOnChangeModoPreparo()}/>
                 </Form.Item>
               </Col>
 
               <Row gutter={[21, 10]} justify="space-between">
                 <Col span={6}>
-                  <Form.Item name="proteinas" label="Proteínas (g)">
+                  <Form.Item name="proteinas" label="Proteínas (g)" rules={[{ required: true, message: 'Campo obrigatório' }]}>
                     <InputNumber min={0} precision={2} style={{ width: '100%' }} />
                   </Form.Item>
                 </Col>
                 <Col span={6}>
-                  <Form.Item name="gorduras" label="Gorduras (g)">
+                  <Form.Item name="gorduras" label="Gorduras (g)" rules={[{ required: true, message: 'Campo obrigatório' }]}>
                     <InputNumber min={0} precision={2} style={{ width: '100%' }} />
                   </Form.Item>
                 </Col>
                 <Col span={6}>
-                  <Form.Item name="carboidratos" label="Carboidratos (g)">
+                  <Form.Item name="carboidratos" label="Carboidratos (g)" rules={[{ required: true, message: 'Campo obrigatório' }]}>
                     <InputNumber min={0} precision={2} style={{ width: '100%' }} />
                   </Form.Item>
                 </Col>
                 <Col span={6}>
-                  <Form.Item name="calorias" label="Calorias (kcal)">
+                  <Form.Item name="calorias" label="Calorias (kcal)" rules={[{ required: true, message: 'Campo obrigatório' }]}>
                     <InputNumber min={0} precision={2} style={{ width: '100%' }} />
                   </Form.Item>
                 </Col>
                 <Col span={6}>
-                  <Form.Item name="gramas" label="Gramas por Porção (g)">
+                  <Form.Item name="gramas" label="Gramas por Porção (g)" rules={[{ required: true, message: 'Campo obrigatório' }]}>
                     <InputNumber min={0} precision={2} style={{ width: '100%' }} />
                   </Form.Item>
                 </Col>

@@ -89,6 +89,24 @@ export default function Detalhes({ pacienteId, children }) {
         });
   };
 
+  const postNovoPlano = (idPaciente, novoPlanoData) => {
+    request(`/plano-meta/${idPaciente}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(novoPlanoData),
+    })
+        .then(() => {
+          message.success('Plano cadastrado com sucesso');
+          fetchPlanos();
+          navigate('/app/plano-meta/listagem'); // Navegar para a nova tela
+        })
+        .catch((err) => {
+          message.error('Erro ao cadastrar plano: ' + (err.message || err));
+        });
+  };
+
   const handleNovoPlanoClick = () => {
     setVisibleNovoPlano(true);
   };
@@ -99,7 +117,7 @@ export default function Detalhes({ pacienteId, children }) {
   };
 
   const handleSubmitNovoPlano = (values) => {
-    console.log("Plano submetido:", values);
+    postNovoPlano(pacienteId, values);
     setVisibleNovoPlano(false);
   };
 
@@ -161,27 +179,27 @@ export default function Detalhes({ pacienteId, children }) {
         </Spin>
       </Modal>
 
-        <Modal
-            open={visibleNovoPlano}
-            title="Novo Plano"
-            okText="Próximo"
-            onCancel={handleCancelNovoPlano}
-            onOk={() => formPlano.submit()}
-            width={600}
-            footer={[
-              <Button key="back" onClick={handleCancelNovoPlano}>
-                Cancelar
-              </Button>,
-              <Button key="submit" type="primary" onClick={() => formPlano.submit()}>
-                Próximo
-              </Button>,
-            ]}
-        >
+      <Modal
+          open={visibleNovoPlano}
+          title="Novo Plano"
+          okText="Próximo"
+          onCancel={handleCancelNovoPlano}
+          onOk={() => formPlano.submit()}
+          width={600}
+          footer={[
+            <Button key="back" onClick={handleCancelNovoPlano}>
+              Cancelar
+            </Button>,
+            <Button key="submit" type="primary" onClick={() => formPlano.submit()}>
+              Próximo
+            </Button>,
+          ]}
+      >
         <Form form={formPlano} layout="vertical" onFinish={handleSubmitNovoPlano}>
           <Row gutter={[10, 5]}>
             <Col span={24}>
               <Form.Item
-                  name="nome"
+                  name="nomePlano"
                   label="Nome do Plano"
                   rules={[{ required: true, message: 'Campo obrigatório' }]}
               >
@@ -190,7 +208,7 @@ export default function Detalhes({ pacienteId, children }) {
             </Col>
             <Col span={12}>
               <Form.Item
-                  name="dataInicio"
+                  name="dtInicial"
                   label="Data Inicial"
                   rules={[{ required: true, message: 'Campo obrigatório' }]}
               >
@@ -199,7 +217,7 @@ export default function Detalhes({ pacienteId, children }) {
             </Col>
             <Col span={12}>
               <Form.Item
-                  name="calorias"
+                  name="qtdDiariaCalorias"
                   label="Calorias"
                   rules={[{ required: true, message: 'Campo obrigatório' }]}
               >
@@ -208,7 +226,7 @@ export default function Detalhes({ pacienteId, children }) {
             </Col>
             <Col span={12}>
               <Form.Item
-                  name="carboidratos"
+                  name="qtdDiariaCarboidratos"
                   label="Carboidratos"
                   rules={[{ required: true, message: 'Campo obrigatório' }]}
               >
@@ -217,7 +235,7 @@ export default function Detalhes({ pacienteId, children }) {
             </Col>
             <Col span={12}>
               <Form.Item
-                  name="gordura"
+                  name="qtdDiariaGordura"
                   label="Gordura"
                   rules={[{ required: true, message: 'Campo obrigatório' }]}
               >
@@ -226,7 +244,7 @@ export default function Detalhes({ pacienteId, children }) {
             </Col>
             <Col span={12}>
               <Form.Item
-                  name="proteina"
+                  name="qtdDiariaProteina"
                   label="Proteína"
                   rules={[{ required: true, message: 'Campo obrigatório' }]}
               >

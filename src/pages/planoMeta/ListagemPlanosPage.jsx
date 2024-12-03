@@ -1,98 +1,147 @@
 import React, { useEffect, useState } from 'react';
-import { Row, Col, Input, DatePicker, Form, Card, Spin } from 'antd';
-import { useLocation } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
+import { Row, Col, Input, Form, Modal, Card, notification, Button } from 'antd';
+import { LoadingOutlined } from '@ant-design/icons';
+import DatePicker from '../../components/DatePicker';
 import request from '../../utils/request';
+import ListagemReceitas from './ListagemReceitas';
 
 export default function ListagemPlanosPage() {
     const [loading, setLoading] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [receitas, setReceitas] = useState([]);
-    const location = useLocation();
-    const planoData = location.state?.planoData || {};
+    const [planoMeta, setPlanoMeta] = useState({});
+    const navigate = useNavigate();
+    const { id } = useParams();
 
     useEffect(() => {
-        fetchReceitas();
+        fetchPlanoMeta();
     }, []);
 
     const fetchReceitas = () => {
         setLoading(true);
-        request('/receitas', {
-            method: 'GET',
+        notification.open({
+            message: 'Aguarde',
+            description: 'Buscando receitas...',
+            icon: <LoadingOutlined />,
+            duration: 0,
+        });
+
+        request(`/plano-meta/${id}/gerar`, {
+            method: 'POST',
         })
             .then((data) => {
+                notification.destroy();
                 setLoading(false);
                 setReceitas(data);
             })
             .catch((err) => {
+                notification.destroy();
                 setLoading(false);
-                console.error('Erro ao buscar receitas:', err);
+                Modal.error({
+                    title: 'Erro ao buscar receitas!',
+                    content: err,
+                });
             });
     };
 
+    const fetchPlanoMeta = () => {
+        request(`/plano-meta/${id}/detalhes`, {
+            method: 'GET',
+        })
+            .then((data) => {
+                setPlanoMeta(data);
+                fetchReceitas();
+            })
+            .catch((err) => {
+                Modal.error({
+                    title: 'Erro ao buscar plano!',
+                    content: err.message,
+                });
+            });
+    }
+
+    const handleSubmit = () => {
+        setSaving(true);
+
+        const body = {
+            idPlano: id,
+            planoGeradoDto: receitas,
+        };
+
+        request('/plano-meta', {
+            method: 'PUT',
+            body,
+        }).then(() => {
+            setSaving(false);
+            Modal.success({
+                title: 'Sucesso!',
+                content: 'O plano foi salvo com sucesso, deseja retornar a tela de pacientes?',
+                onOk: () => navigate('/app/pacientes'),
+            });
+        }).catch((err) => {
+            setSaving(false);
+            Modal.error({
+                title: 'Erro ao salvar plano!',
+                content: err.message,
+            });
+        })
+    }
+
     return (
-        <div style={{ padding: '20px' }}>
-            <h2>Listagem de Planos</h2>
-            <Form layout="vertical" initialValues={planoData}>
-                <Row gutter={[16, 16]}>
-                    <Col span={4}>
-                        <Form.Item
-                            name="dtInicial"
-                            label="Data Inicial"
-                            rules={[{ required: true, message: 'Campo obrigatório' }]}
-                        >
-                            <DatePicker placeholder="Data Inicial" style={{ width: '100%' }} />
-                        </Form.Item>
-                    </Col>
-                    <Col span={4}>
-                        <Form.Item
-                            name="dtFinal"
-                            label="Data Final"
-                            rules={[{ required: true, message: 'Campo obrigatório' }]}
-                        >
-                            <DatePicker placeholder="Data Final" style={{ width: '100%' }} />
-                        </Form.Item>
-                    </Col>
-                </Row>
-                <h2>Informações Nutricionais Diárias:</h2>
-                <Row gutter={[16, 16]}>
-                    <Col span={4}>
-                        <Form.Item
-                            name="qtdDiariaCalorias"
-                            label="Calorias"
-                            rules={[{ required: true, message: 'Campo obrigatório' }]}
-                        >
-                            <Input placeholder="Calorias" type="number" />
-                        </Form.Item>
-                    </Col>
-                    <Col span={4}>
-                        <Form.Item
-                            name="qtdDiariaCarboidratos"
-                            label="Carboidratos"
-                            rules={[{ required: true, message: 'Campo obrigatório' }]}
-                        >
-                            <Input placeholder="Carboidratos" type="number" />
-                        </Form.Item>
-                    </Col>
-                    <Col span={4}>
-                        <Form.Item
-                            name="qtdDiariaGordura"
-                            label="Gordura"
-                            rules={[{ required: true, message: 'Campo obrigatório' }]}
-                        >
-                            <Input placeholder="Gordura" type="number" />
-                        </Form.Item>
-                    </Col>
-                    <Col span={4}>
-                        <Form.Item
-                            name="qtdDiariaProteina"
-                            label="Proteína"
-                            rules={[{ required: true, message: 'Campo obrigatório' }]}
-                        >
-                            <Input placeholder="Proteína" type="number" />
-                        </Form.Item>
-                    </Col>
-                </Row>
-            </Form>
-            <h2>Receitas Cadastradas:</h2>
-        </div>
+        <Row gutter={[10, 20]} style={{ padding: 20 }}>
+            <Col span={24}>
+                <Card title='Listagem de Planos'>
+                    <Form layout="vertical">
+                        <Row gutter={[16, 16]}>
+                            <Col span={4}>
+                                <Form.Item label="Data Inicial">
+                                    <DatePicker placeholder="Data Inicial" style={{ width: '100%' }} value={planoMeta.dtInicioMeta} />
+                                </Form.Item>
+                            </Col>
+                            <Col span={4}>
+                                <Form.Item label="Data Final">
+                                    <DatePicker placeholder="Data Final" style={{ width: '100%' }} value={planoMeta.dtFinalMeta} />
+                                </Form.Item>
+                            </Col>
+                        </Row>
+                        <Card size='small' title='Informações Nutricionais Diárias'>
+                            <Row gutter={[16, 16]}>
+                                <Col span={4}>
+                                    <Form.Item label="Calorias">
+                                        <Input placeholder="Calorias" type="number" value={planoMeta.qtdDiariaCalorias} />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={4}>
+                                    <Form.Item label="Carboidratos">
+                                        <Input placeholder="Carboidratos" type="number" value={planoMeta.qtdDiariaCarboidratos} />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={4}>
+                                    <Form.Item label="Gordura">
+                                        <Input placeholder="Gordura" type="number" value={planoMeta.qtdDiariaGordura} />
+                                    </Form.Item>
+                                </Col>
+                                <Col span={4}>
+                                    <Form.Item label="Proteína">
+                                        <Input placeholder="Proteína" type="number" value={planoMeta.qtdDiariaProteina} />
+                                    </Form.Item>
+                                </Col>
+                            </Row>
+                        </Card>
+                    </Form>
+                </Card>
+            </Col>
+            <Col span={24}>
+                <Card title='Receitas Cadastradas' loading={loading}>
+                    <ListagemReceitas data={receitas} />
+                </Card>
+            </Col>
+            <Col span={3} offset={21}>
+                <Button block disabled={false} type='primary' onClick={handleSubmit}>
+                    Salvar
+                </Button>
+            </Col>
+        </Row>
     );
 }

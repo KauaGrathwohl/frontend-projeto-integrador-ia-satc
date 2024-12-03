@@ -22,7 +22,7 @@ export default function AppRouter() {
               <Route path='dashboard' element={<Dashboard />} />
               <Route path='pacientes' element={<Paciente />} />
               <Route path='plano-meta' element={<PlanoMeta />} />
-              <Route path='plano-meta/listagem' element={<ListagemPlanosPage />} /> {/* Adicionando a rota da ListagemPlanosPage */}
+              <Route path='plano-meta/:id/listagem' element={<ListagemPlanosPage />} /> {/* Adicionando a rota da ListagemPlanosPage */}
               <Route path='receitas' element={<Receita />} />
             </Route>
           </Route>

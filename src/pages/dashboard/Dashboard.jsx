@@ -8,18 +8,9 @@ export default function Dashboard() {
   const auth = useAuth();
   const [pacientesCount, setPacientesCount] = useState(0);
   const [receitasCount, setReceitasCount] = useState(0);
-  const [planosCount, setPlanosCount] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   useTitle('Dashboard');
-
-  useEffect(() => {
-      if (auth.isAuthenticated()) {
-          fetchPacientesCount();
-          fetchReceitasCount();
-          fetchPlanosCount();
-      }
-  }, [auth]);
 
   // Função para buscar a quantidade de pacientes cadastrados
 
@@ -63,25 +54,12 @@ export default function Dashboard() {
         });
   }
 
-  const fetchPlanosCount = () => {
-      setLoading(true);
-
-      request('/plano-meta/quantidade', {
-            method: 'GET',
-      })
-          .then((data) => {
-              setPlanosCount(data);
-              setLoading(false);
-          })
-          .catch((err) => {
-              setLoading(false);
-              setError(err);
-              Modal.error({
-                  title: 'Erro',
-                  content: err.message || 'Erro ao buscar dados',
-              });
-          });
-  }
+  useEffect(() => {
+    if (auth.isAuthenticated()) {
+      fetchPacientesCount();
+      fetchReceitasCount()
+    }
+  }, [auth]);
 
   if (!auth.isAuthenticated()) {
     return null;
@@ -150,7 +128,7 @@ export default function Dashboard() {
                 borderRadius: '8px',
               }}
           >
-            <h2>{planosCount}</h2>
+            <h2>0</h2>
           </Card>
         </Col>
       </Row>
